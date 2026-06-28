@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IIPC – Video Gallery</title>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark:   #1a4a2e;
+      --green-mid:    #2d7a4f;
+      --green-light:  #3fa06a;
+      --gold:         #c9a84c;
+      --gold-light:   #e8c97a;
+      --cream:        #f9f5ee;
+      --cream-dark:   #f0e9d8;
+      --text-dark:    #1c1c1c;
+      --text-mid:     #3d3d3d;
+      --text-muted:   #777;
+      --border:       #d4c9a8;
+      --shadow:       0 4px 18px rgba(0,0,0,0.13);
+    }
+
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    /* ── TOP BAND ── */
+    .top-band {
+      background: var(--green-dark);
+      padding: 10px 0;
+      text-align: center;
+    }
+    .top-band p {
+      color: var(--gold-light);
+      font-family: 'Amiri', serif;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── PAGE WRAPPER ── */
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 36px 0 18px;
+    }
+    .section-label::before,
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .section-label span {
+      font-family: 'Amiri', serif;
+      font-size: 1.05rem;
+      color: var(--green-mid);
+      white-space: nowrap;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ── PLAYER AREA ── */
+    .player-wrapper {
+      background: #000;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      box-shadow: var(--shadow);
+    }
+    .player-wrapper iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    /* ── NOW PLAYING INFO ── */
+    .now-playing-info {
+      margin-top: 14px;
+      padding: 14px 18px;
+      background: var(--green-dark);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .now-playing-badge {
+      background: var(--gold);
+      color: var(--green-dark);
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+    .now-playing-title {
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .now-playing-part {
+      color: var(--gold-light);
+      font-size: 0.85rem;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    /* ── PARTS STRIP ── */
+    .parts-strip {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 16px 0 4px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .parts-strip::-webkit-scrollbar { height: 4px; }
+    .parts-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .part-thumb {
+      flex: 0 0 160px;
+      cursor: pointer;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: border-color 0.2s, transform 0.15s;
+      background: #000;
+    }
+    .part-thumb:hover { transform: translateY(-2px); border-color: var(--gold-light); }
+    .part-thumb.active { border-color: var(--gold); }
+
+    .part-thumb img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      display: block;
+      opacity: 0.88;
+      transition: opacity 0.2s;
+    }
+    .part-thumb:hover img, .part-thumb.active img { opacity: 1; }
+
+    .part-thumb-label {
+      background: var(--green-dark);
+      color: var(--gold-light);
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-align: center;
+      padding: 4px 6px;
+      letter-spacing: 0.04em;
+    }
+    .part-thumb.active .part-thumb-label { background: var(--gold); color: var(--green-dark); }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 36px 0 0;
+    }
+
+    /* ── VIDEO GRID ── */
+    .grid-heading {
+      font-family: 'Amiri', serif;
+      font-size: 1.55rem;
+      color: var(--green-dark);
+      margin: 28px 0 20px;
+      padding-left: 4px;
+      border-left: 4px solid var(--gold);
+      padding-left: 14px;
+      line-height: 1.3;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 22px;
+    }
+
+    .video-card {
+      background: #fff;
+      border-radius: 7px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.18s;
+      border: 2px solid transparent;
+    }
+    .video-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); border-color: var(--gold-light); }
+    .video-card.active-card { border-color: var(--gold); }
+
+    .card-thumb-wrap {
+      position: relative;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      background: #000;
+    }
+    .card-thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.2s;
+    }
+    .video-card:hover .card-thumb-wrap img { opacity: 0.85; }
+
+    .play-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .video-card:hover .play-overlay { opacity: 1; }
+    .play-btn {
+      width: 46px; height: 46px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .play-btn svg { width: 18px; height: 18px; fill: var(--green-dark); margin-left: 3px; }
+
+    .parts-badge {
+      position: absolute;
+      bottom: 8px; right: 8px;
+      background: rgba(26,74,46,0.88);
+      color: var(--gold-light);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 3px;
+      letter-spacing: 0.05em;
+    }
+
+    .card-body { padding: 13px 14px 16px; }
+    .card-year {
+      font-size: 0.68rem;
+      color: var(--gold);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .card-title {
+      font-family: 'Amiri', serif;
+      font-size: 1rem;
+      color: var(--text-dark);
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .card-speaker {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .card-speaker strong { color: var(--green-mid); }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: var(--green-dark);
+      padding: 22px 20px;
+      text-align: center;
+      margin-top: 50px;
+    }
+    .footer p {
+      color: var(--gold-light);
+      font-family: 'Amiri', serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+    }
+    .footer small { color: rgba(255,255,255,0.45); font-size: 0.72rem; display: block; margin-top: 5px; }
+
+    @media (max-width: 600px) {
+      .now-playing-part { display: none; }
+      .video-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .part-thumb { flex: 0 0 130px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-band">
+  <p>Islamic Information & Products Centre &nbsp;·&nbsp; Promoting the Message of Allah in Al-Qur'an &nbsp;·&nbsp; Muhammad Shaikh – Speaker</p>
+</div>
+
+<div class="page">
+
+  <!-- NOW PLAYING -->
+  <div class="section-label"><span>Now Playing</span></div>
+
+  <div class="player-wrapper">
+    <iframe id="mainPlayer"
+      src="https://www.youtube.com/embed/TG1ho_w8q5I?si=g_b9p-39fz26TMBc"
+      title="YouTube video player"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      referrerpolicy="strict-origin-when-cross-origin"
+      allowfullscreen></iframe>
+  </div>
+
+  <div class="now-playing-info">
+    <span class="now-playing-badge">▶ Playing</span>
+    <span class="now-playing-title" id="npTitle">1989 Debate with Ismaili Doctor in Urdu</span>
+    <span class="now-playing-part" id="npPart">Part 1</span>
+  </div>
+
+  <!-- PARTS STRIP -->
+  <div class="parts-strip" id="partsStrip"></div>
+
+  <!-- DIVIDER -->
+  <div class="divider"></div>
+
+  <!-- VIDEO GRID -->
+  <h2 class="grid-heading">All Lectures by Muhammad Shaikh</h2>
+  <div class="video-grid" id="videoGrid"></div>
+
+</div>
+
+<div class="footer">
+  <p>IIPC – Islamic Information &amp; Products Centre</p>
+  <small>Lectures by Muhammad Shaikh &nbsp;|&nbsp; iipccanada.com</small>
+</div>
+
+<script>
+  const VIDEOS = [
+    {
+      id: 'v1',
+      title: '1989 Debate with Ismaili Doctor in Urdu',
+      year: '1989',
+      parts: [
+        { label: 'Part 1', embedId: 'TG1ho_w8q5I', thumb: 'https://i.ytimg.com/vi/TG1ho_w8q5I/maxresdefault.jpg' },
+        { label: 'Part 2', embedId: 'cvR0U8y56JY', thumb: 'https://i.ytimg.com/vi/cvR0U8y56JY/maxresdefault.jpg' },
+      ]
+    },
+    {
+      id: 'v2',
+      title: '1991 What Al-Qur\'an says about Al-Qur\'an The Reading – Urdu',
+      year: '1991',
+      parts: [
+        { label: 'Part 1', embedId: '2X4xDIgFynU', thumb: 'https://i.ytimg.com/vi/2X4xDIgFynU/maxresdefault.jpg' },
+        { label: 'Part 2', embedId: '4SAzCOrAhII', thumb: 'https://i.ytimg.com/vi/4SAzCOrAhII/maxresdefault.jpg' },
+        { label: 'Part 3', embedId: 'iDJ9xyBySdQ', thumb: 'https://i.ytimg.com/vi/iDJ9xyBySdQ/maxresdefault.jpg' },
+        { label: 'Part 4', embedId: 'Mc6KJtQiZfY', thumb: 'https://i.ytimg.com/vi/Mc6KJtQiZfY/maxresdefault.jpg' },
+      ]
+    },
+    {
+      id: 'v3',
+      title: '1991 What Al-Qur\'an says about Islam and Muslim – Urdu',
+      year: '1991',
+      parts: [
+        { label: 'Part 1', embedId: 'a7l8n78e6NY', thumb: 'https://i.ytimg.com/vi/a7l8n78e6NY/hqdefault.jpg' },
+        { label: 'Part 2', embedId: 'rz22hvkIKBA', thumb: 'https://i.ytimg.com/vi/rz22hvkIKBA/hqdefault.jpg' },
+        { label: 'Part 3', embedId: 'xUKVYXjZdCQ', thumb: 'https://i.ytimg.com/vi/xUKVYXjZdCQ/hqdefault.jpg' },
+        { label: 'Part 4', embedId: 'CVwfI6Km7yQ', thumb: 'https://i.ytimg.com/vi/CVwfI6Km7yQ/hqdefault.jpg' },
+      ]
+    },
+    {
+      id: 'v4',
+      title: '1991 What Al-Qur\'an says about Islam and Muslim – English',
+      year: '1991',
+      parts: [
+        { label: 'Part 1', embedId: 'MqDIXgPFZRI', thumb: 'https://i.ytimg.com/vi/MqDIXgPFZRI/maxresdefault.jpg' },
+        { label: 'Part 2', embedId: 'UYuKATahi7k', thumb: 'https://i.ytimg.com/vi/UYuKATahi7k/maxresdefault.jpg' },
+        { label: 'Part 3', embedId: '94MePJN7wOQ', thumb: 'https://i.ytimg.com/vi/94MePJN7wOQ/maxresdefault.jpg' },
+        { label: 'Part 4', embedId: 'ZNiUoIDA1OU', thumb: 'https://i.ytimg.com/vi/ZNiUoIDA1OU/maxresdefault.jpg' },
+        { label: 'Part 5', embedId: '-Sr_585J0vw', thumb: 'https://i.ytimg.com/vi/-Sr_585J0vw/maxresdefault.jpg' },
+      ]
+    },
+    {
+      id: 'v5',
+      title: '1992 What Al-Qur\'an says about Muhammad ﷺ – English',
+      year: '1992',
+      parts: [
+        { label: 'Part 1', embedId: 'qLqEqlZGC4M', thumb: 'https://i.ytimg.com/vi/qLqEqlZGC4M/maxresdefault.jpg' },
+        { label: 'Part 2', embedId: 'Fzll-43WgOY', thumb: 'https://i.ytimg.com/vi/Fzll-43WgOY/maxresdefault.jpg' },
+        { label: 'Part 3', embedId: 'qqgOjeuMt24', thumb: 'https://i.ytimg.com/vi/qqgOjeuMt24/maxresdefault.jpg' },
+        { label: 'Part 4', embedId: 'CbaNb1jGYz4', thumb: 'https://i.ytimg.com/vi/CbaNb1jGYz4/maxresdefault.jpg' },
+        { label: 'Part 5', embedId: '6ZJrPNPjTpk', thumb: 'https://i.ytimg.com/vi/6ZJrPNPjTpk/maxresdefault.jpg' },
+        { label: 'Part 6', embedId: 'iEX59DNy7_I', thumb: 'https://i.ytimg.com/vi/iEX59DNy7_I/maxresdefault.jpg' },
+      ]
+    },
+  ];
+
+  let activeVideoId = 'v1';
+  let activePartIndex = 0;
+
+  const mainPlayer = document.getElementById('mainPlayer');
+  const npTitle    = document.getElementById('npTitle');
+  const npPart     = document.getElementById('npPart');
+  const partsStrip = document.getElementById('partsStrip');
+  const videoGrid  = document.getElementById('videoGrid');
+
+  function playPart(videoId, partIndex) {
+    const video = VIDEOS.find(v => v.id === videoId);
+    if (!video) return;
+    activeVideoId   = videoId;
+    activePartIndex = partIndex;
+    const part = video.parts[partIndex];
+    mainPlayer.src = `https://www.youtube.com/embed/${part.embedId}?autoplay=1&rel=0`;
+    npTitle.textContent = video.title;
+    npPart.textContent  = part.label;
+    renderPartsStrip(video);
+    updateGridActive();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderPartsStrip(video) {
+    partsStrip.innerHTML = '';
+    video.parts.forEach((part, i) => {
+      const el = document.createElement('div');
+      el.className = 'part-thumb' + (i === activePartIndex ? ' active' : '');
+      el.innerHTML = `
+        <img src="${part.thumb}" alt="${part.label}" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${part.embedId}/hqdefault.jpg'"/>
+        <div class="part-thumb-label">${part.label}</div>
+      `;
+      el.addEventListener('click', () => playPart(activeVideoId, i));
+      partsStrip.appendChild(el);
+    });
+  }
+
+  function updateGridActive() {
+    document.querySelectorAll('.video-card').forEach(card => {
+      card.classList.toggle('active-card', card.dataset.vid === activeVideoId);
+    });
+  }
+
+  function renderGrid() {
+    videoGrid.innerHTML = '';
+    VIDEOS.forEach(video => {
+      const thumb = video.parts[0].thumb;
+      const card = document.createElement('div');
+      card.className = 'video-card' + (video.id === activeVideoId ? ' active-card' : '');
+      card.dataset.vid = video.id;
+      card.innerHTML = `
+        <div class="card-thumb-wrap">
+          <img src="${thumb}" alt="${video.title}" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${video.parts[0].embedId}/hqdefault.jpg'"/>
+          <div class="play-overlay">
+            <div class="play-btn">
+              <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+            </div>
+          </div>
+          <span class="parts-badge">${video.parts.length} parts</span>
+        </div>
+        <div class="card-body">
+          <div class="card-year">${video.year}</div>
+          <div class="card-title">${video.title}</div>
+          <div class="card-speaker">Speaker: <strong>Muhammad Shaikh</strong></div>
+        </div>
+      `;
+      card.addEventListener('click', () => playPart(video.id, 0));
+      videoGrid.appendChild(card);
+    });
+  }
+
+  // Init
+  renderGrid();
+  renderPartsStrip(VIDEOS[0]);
+</script>
+</body>
+</html>
